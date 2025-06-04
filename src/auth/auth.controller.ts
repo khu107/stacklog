@@ -15,6 +15,7 @@ import { AuthService } from './auth.service';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { GoogleAuthGuard } from './guards/google-auth.guard';
 import { NaverAuthGuard } from './guards/naver-auth.guard';
+import { GithubAuthGuard } from './guards/github-auth.guard';
 
 @Controller('auth')
 export class AuthController {
@@ -116,6 +117,57 @@ export class AuthController {
       console.log('✅ 프로필 완료 → 홈으로 리다이렉트');
       res.redirect(
         `http://localhost:3001/auth/callback?needsSetup=false&provider=naver`,
+      );
+    }
+  }
+
+  @Get('github')
+  @UseGuards(GithubAuthGuard)
+  async githubAuth(@Request() req) {
+    // Guard에서 자동으로 GitHub로 리다이렉트됨
+  }
+
+  @Get('github/callback')
+  @UseGuards(GithubAuthGuard)
+  async githubAuthRedirect(@Request() req, @Res() res: Response) {
+    const result = req.user;
+
+    console.log('🐙 깃허브 OAuth 콜백 결과:', {
+      email: result.user?.email,
+      isNewUser: result.isNewUser,
+      needsProfileSetup: result.needsProfileSetup,
+      userStatus: result.user?.status,
+    });
+
+    // 쿠키 설정 (구글/네이버와 동일)
+    const cookieOptions = {
+      httpOnly: false,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax' as const,
+      path: '/',
+    };
+
+    res.cookie('accessToken', result.accessToken, {
+      ...cookieOptions,
+      maxAge: 15 * 60 * 1000, // 15분
+    });
+
+    res.cookie('refreshToken', result.refreshToken, {
+      ...cookieOptions,
+      maxAge: 30 * 24 * 60 * 60 * 1000, // 30일
+    });
+
+    console.log('🍪 깃허브 쿠키 설정 완료');
+
+    if (result.needsProfileSetup) {
+      console.log('👤 프로필 설정 필요 → 콜백으로 리다이렉트');
+      res.redirect(
+        `http://localhost:3001/auth/callback?needsSetup=true&provider=github`,
+      );
+    } else {
+      console.log('✅ 프로필 완료 → 홈으로 리다이렉트');
+      res.redirect(
+        `http://localhost:3001/auth/callback?needsSetup=false&provider=github`,
       );
     }
   }

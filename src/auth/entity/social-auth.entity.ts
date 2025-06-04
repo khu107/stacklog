@@ -29,10 +29,10 @@ export class SocialAuth {
 
   @Column({ name: 'provider_id' })
   @Index()
-  providerId: string; // 소셜에서 제공하는 고유 ID
+  providerId: string;
 
   @Column({ name: 'provider_email' })
-  providerEmail: string; // 소셜에서 가져온 원본 이메일
+  providerEmail: string;
 
   @CreateDateColumn({ name: 'created_at' })
   createdAt: Date;

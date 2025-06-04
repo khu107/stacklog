@@ -126,7 +126,7 @@ export class AuthService {
     }
   }
 
-  // 🆕 네이버 로그인 처리 (구글 로직과 동일)
+  // 네이버 로그인 처리 (구글 로직과 동일)
   async naverLogin(naverData: {
     providerId: string;
     email: string;
@@ -212,6 +212,93 @@ export class AuthService {
       await queryRunner.release();
     }
   }
+
+  async githubLogin(githubData: {
+    providerId: string;
+    email: string;
+    displayName: string;
+    avatarUrl?: string;
+  }) {
+    // 기존 깃허브 사용자 찾기 (provider + providerId로 중복 방지)
+    const existingSocial = await this.socialAuthRepository.findOne({
+      where: {
+        provider: SocialProvider.GITHUB,
+        providerId: githubData.providerId,
+      },
+      relations: ['user'],
+    });
+
+    if (existingSocial) {
+      // 기존 사용자 - 깃허브 정보 업데이트
+      await this.userRepository.update(existingSocial.userId, {
+        email: githubData.email,
+        displayName: githubData.displayName,
+        avatarUrl: githubData.avatarUrl || existingSocial.user.avatarUrl,
+      });
+
+      // UsersService 사용
+      const updatedUser = await this.usersService.findOne(
+        existingSocial.userId,
+      );
+
+      if (!updatedUser) {
+        throw new NotFoundException('사용자 정보를 찾을 수 없습니다');
+      }
+
+      // JWT 토큰 생성
+      const tokens = this.generateTokens(updatedUser);
+
+      return {
+        user: updatedUser,
+        isNewUser: false,
+        needsProfileSetup: updatedUser.status === UserStatus.PENDING,
+        ...tokens,
+      };
+    }
+
+    // 새 사용자 생성 (PENDING 상태)
+    const queryRunner =
+      this.userRepository.manager.connection.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+
+    try {
+      const user = queryRunner.manager.create(User, {
+        email: githubData.email,
+        displayName: githubData.displayName,
+        avatarUrl: githubData.avatarUrl,
+        status: UserStatus.PENDING,
+        emailVerified: true,
+      });
+      const savedUser = await queryRunner.manager.save(user);
+
+      const socialAuth = queryRunner.manager.create(SocialAuth, {
+        userId: savedUser.id,
+        provider: SocialProvider.GITHUB,
+        providerId: githubData.providerId,
+        providerEmail: githubData.email,
+      });
+      await queryRunner.manager.save(socialAuth);
+
+      await queryRunner.commitTransaction();
+
+      // JWT 토큰 생성
+      const tokens = this.generateTokens(savedUser);
+
+      return {
+        user: savedUser,
+        isNewUser: true,
+        needsProfileSetup: savedUser.status === UserStatus.PENDING,
+        ...tokens,
+      };
+    } catch (error) {
+      await queryRunner.rollbackTransaction();
+      throw error;
+    } finally {
+      await queryRunner.release();
+    }
+  }
+
   // 프로필 설정 완료 (JWT 토큰 재발급)
   async completeProfile(userId: number, idname: string, bio?: string) {
     // UsersService 사용

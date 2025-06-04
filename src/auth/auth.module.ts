@@ -12,6 +12,7 @@ import { SocialAuth } from './entity/social-auth.entity';
 import { GoogleStrategy } from './strategies/google.strategy';
 import { UsersModule } from 'src/users/users.module';
 import { NaverStrategy } from './strategies/naver.strategy';
+import { GithubStrategy } from './strategies/github.strategy';
 
 @Module({
   imports: [
@@ -34,7 +35,13 @@ import { NaverStrategy } from './strategies/naver.strategy';
       inject: [ConfigService],
     }),
   ],
-  providers: [AuthService, JwtStrategy, GoogleStrategy, NaverStrategy],
+  providers: [
+    AuthService,
+    JwtStrategy,
+    GoogleStrategy,
+    NaverStrategy,
+    GithubStrategy,
+  ],
   controllers: [AuthController],
   exports: [AuthService, JwtModule],
 })
