@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { MiddlewareConsumer, Module, RequestMethod } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import * as Joi from 'joi';
 import { ConfigModule, ConfigService } from '@nestjs/config';
@@ -6,6 +6,7 @@ import { User } from './users/entity/user.entity';
 import { SocialAuth } from './auth/entity/social-auth.entity';
 import { AuthModule } from './auth/auth.module';
 import { UsersModule } from './users/users.module';
+import { TokenMiddleware } from './auth/middleware/token.middleware';
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -24,6 +25,10 @@ import { UsersModule } from './users/users.module';
         EMAIL_PASS: Joi.string().required(),
         GOOGLE_CLIENT_ID: Joi.string().required(),
         GOOGLE_CLIENT_SECRET: Joi.string().required(),
+        NAVER_CLIENT_ID: Joi.string().required(),
+        NAVER_CLIENT_SECRET: Joi.string().required(),
+        GITHUB_CLIENT_ID: Joi.string().required(),
+        GITHUB_CLIENT_SECRET: Joi.string().required(),
       }),
     }),
 
@@ -43,5 +48,23 @@ import { UsersModule } from './users/users.module';
     AuthModule,
     UsersModule,
   ],
+  providers: [TokenMiddleware],
 })
-export class AppModule {}
+export class AppModule {
+  configure(consumer: MiddlewareConsumer) {
+    consumer
+      .apply(TokenMiddleware)
+      .exclude(
+        // OAuth 라우트 제외
+        { path: 'auth/google', method: RequestMethod.GET },
+        { path: 'auth/google/callback', method: RequestMethod.GET },
+        { path: 'auth/naver', method: RequestMethod.GET },
+        { path: 'auth/naver/callback', method: RequestMethod.GET },
+        { path: 'auth/github', method: RequestMethod.GET },
+        { path: 'auth/github/callback', method: RequestMethod.GET },
+        // Public 라우트 제외
+        { path: 'users/check-idname/(.*)', method: RequestMethod.GET },
+      )
+      .forRoutes('*');
+  }
+}

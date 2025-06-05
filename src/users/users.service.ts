@@ -25,7 +25,10 @@ export class UsersService {
   }
 
   findOne(id: number) {
-    return this.userRepository.findOne({ where: { id: +id } });
+    return this.userRepository.findOne({
+      where: { id: +id },
+      relations: ['socialAuth'],
+    });
   }
 
   update(id: number, updateUserDto: UpdateUserDto) {
