@@ -44,6 +44,15 @@ export class User extends BaseTable {
   @Column({ name: 'email_verified', default: true })
   emailVerified: boolean;
 
+  @Column({ nullable: true })
+  github: string;
+
+  @Column({ nullable: true })
+  linkedin: string;
+
+  @Column({ nullable: true })
+  website: string;
+
   // 1:1 관계
   @OneToOne(() => SocialAuth, (socialAuth) => socialAuth.user, {
     cascade: true,

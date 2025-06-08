@@ -1,10 +1,9 @@
-// src/auth/auth.controller.ts (리팩토링 후)
+// src/auth/auth.controller.ts
 import {
   Controller,
   Post,
   Body,
   Get,
-  Param,
   UseGuards,
   Request,
   Res,
@@ -34,19 +33,11 @@ export class AuthController {
   async googleAuthRedirect(@Request() req, @Res() res: Response) {
     const result = req.user;
 
-    console.log('🔑 Google OAuth 콜백 결과:', {
-      email: result.user?.email,
-      isNewUser: result.isNewUser,
-      needsProfileSetup: result.needsProfileSetup,
-      userStatus: result.user?.status,
-    });
-
-    // 🔧 개발 환경용 쿠키 설정
     const cookieOptions = {
       httpOnly: false,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax' as const,
-      path: '/', // 🆕 경로 설정
+      path: '/',
     };
 
     res.cookie('accessToken', result.accessToken, {
@@ -56,16 +47,12 @@ export class AuthController {
 
     res.cookie('refreshToken', result.refreshToken, {
       ...cookieOptions,
-      maxAge: 30 * 24 * 60 * 60 * 1000, // 30일
+      maxAge: 7 * 24 * 60 * 60 * 1000, // 7일
     });
 
-    console.log('🍪 쿠키 설정 완료');
-
     if (result.needsProfileSetup) {
-      console.log('👤 프로필 설정 필요 → 콜백으로 리다이렉트');
       res.redirect(`http://localhost:3001/auth/callback?needsSetup=true`);
     } else {
-      console.log('✅ 프로필 완료 → 홈으로 리다이렉트');
       res.redirect(`http://localhost:3001/auth/callback?needsSetup=false`);
     }
   }
@@ -81,14 +68,6 @@ export class AuthController {
   async naverAuthRedirect(@Request() req, @Res() res: Response) {
     const result = req.user;
 
-    console.log('🟢 네이버 OAuth 콜백 결과:', {
-      email: result.user?.email,
-      isNewUser: result.isNewUser,
-      needsProfileSetup: result.needsProfileSetup,
-      userStatus: result.user?.status,
-    });
-
-    // 쿠키 설정 (구글과 동일)
     const cookieOptions = {
       httpOnly: false,
       secure: process.env.NODE_ENV === 'production',
@@ -103,18 +82,14 @@ export class AuthController {
 
     res.cookie('refreshToken', result.refreshToken, {
       ...cookieOptions,
-      maxAge: 30 * 24 * 60 * 60 * 1000, // 30일
+      maxAge: 7 * 24 * 60 * 60 * 1000, // 7일
     });
 
-    console.log('🍪 네이버 쿠키 설정 완료');
-
     if (result.needsProfileSetup) {
-      console.log('👤 프로필 설정 필요 → 콜백으로 리다이렉트');
       res.redirect(
         `http://localhost:3001/auth/callback?needsSetup=true&provider=naver`,
       );
     } else {
-      console.log('✅ 프로필 완료 → 홈으로 리다이렉트');
       res.redirect(
         `http://localhost:3001/auth/callback?needsSetup=false&provider=naver`,
       );
@@ -132,14 +107,6 @@ export class AuthController {
   async githubAuthRedirect(@Request() req, @Res() res: Response) {
     const result = req.user;
 
-    console.log('🐙 깃허브 OAuth 콜백 결과:', {
-      email: result.user?.email,
-      isNewUser: result.isNewUser,
-      needsProfileSetup: result.needsProfileSetup,
-      userStatus: result.user?.status,
-    });
-
-    // 쿠키 설정 (구글/네이버와 동일)
     const cookieOptions = {
       httpOnly: false,
       secure: process.env.NODE_ENV === 'production',
@@ -154,18 +121,14 @@ export class AuthController {
 
     res.cookie('refreshToken', result.refreshToken, {
       ...cookieOptions,
-      maxAge: 30 * 24 * 60 * 60 * 1000, // 30일
+      maxAge: 7 * 24 * 60 * 60 * 1000, // 7일
     });
 
-    console.log('🍪 깃허브 쿠키 설정 완료');
-
     if (result.needsProfileSetup) {
-      console.log('👤 프로필 설정 필요 → 콜백으로 리다이렉트');
       res.redirect(
         `http://localhost:3001/auth/callback?needsSetup=true&provider=github`,
       );
     } else {
-      console.log('✅ 프로필 완료 → 홈으로 리다이렉트');
       res.redirect(
         `http://localhost:3001/auth/callback?needsSetup=false&provider=github`,
       );
@@ -175,13 +138,34 @@ export class AuthController {
   // 프로필 설정 완료
   @UseGuards(JwtAuthGuard)
   @Post('complete-profile')
-  async completeProfile(@Request() req, @Body() body: any) {
+  async completeProfile(
+    @Request() req,
+    @Body() body: any,
+    @Res() res: Response,
+  ) {
     const { idname, bio } = body;
-    const userId = req.user.id;
+    const userId = req.user.sub;
 
     const result = await this.authService.completeProfile(userId, idname, bio);
 
-    return result;
+    const cookieOptions = {
+      httpOnly: false,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax' as const,
+      path: '/',
+    };
+
+    res.cookie('accessToken', result.accessToken, {
+      ...cookieOptions,
+      maxAge: 15 * 60 * 1000, // 15분
+    });
+
+    res.cookie('refreshToken', result.refreshToken, {
+      ...cookieOptions,
+      maxAge: 7 * 24 * 60 * 60 * 1000, // 7일
+    });
+
+    return res.json(result);
   }
 
   @Post('refresh')
@@ -194,7 +178,6 @@ export class AuthController {
 
     const result = await this.authService.refreshAccessToken(refreshToken);
 
-    // 새 Access Token을 쿠키로 설정
     const cookieOptions = {
       httpOnly: false,
       secure: process.env.NODE_ENV === 'production',
@@ -204,15 +187,21 @@ export class AuthController {
 
     res.cookie('accessToken', result.accessToken, {
       ...cookieOptions,
-      maxAge: 15 * 60 * 1000,
+      maxAge: 15 * 60 * 1000, // 15분
     });
 
     res.cookie('refreshToken', result.refreshToken, {
       ...cookieOptions,
-      maxAge: 30 * 24 * 60 * 60 * 1000,
+      maxAge: 7 * 24 * 60 * 60 * 1000, // 7일
     });
 
-    console.log('✅ 토큰 갱신 완료');
-    return { success: true };
+    return res.json({ success: true });
+  }
+
+  @Post('logout')
+  async logout(@Res() res: Response) {
+    res.clearCookie('accessToken', { path: '/' });
+    res.clearCookie('refreshToken', { path: '/' });
+    return res.json({ success: true });
   }
 }

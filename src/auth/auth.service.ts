@@ -31,11 +31,12 @@ export class AuthService {
       idname: user.idname,
       displayName: user.displayName,
       avatarUrl: user.avatarUrl,
+      bio: user.bio,
     };
 
     return {
-      accessToken: this.jwtService.sign(payload, { expiresIn: '15m' }),
-      refreshToken: this.jwtService.sign(payload, { expiresIn: '30d' }),
+      accessToken: this.jwtService.sign(payload, { expiresIn: '15m' }), // 15분
+      refreshToken: this.jwtService.sign(payload, { expiresIn: '7d' }), // 7일
     };
   }
 
@@ -56,11 +57,8 @@ export class AuthService {
     });
 
     if (existingSocial) {
-      // 기존 사용자 - 구글 정보 업데이트
       await this.userRepository.update(existingSocial.userId, {
         email: googleData.email,
-        displayName: googleData.displayName,
-        avatarUrl: googleData.avatarUrl || existingSocial.user.avatarUrl,
       });
 
       // UsersService 사용
@@ -146,8 +144,6 @@ export class AuthService {
       // 기존 사용자 - 네이버 정보 업데이트
       await this.userRepository.update(existingSocial.userId, {
         email: naverData.email,
-        displayName: naverData.displayName,
-        avatarUrl: naverData.avatarUrl || existingSocial.user.avatarUrl,
       });
 
       // UsersService 사용
@@ -232,8 +228,6 @@ export class AuthService {
       // 기존 사용자 - 깃허브 정보 업데이트
       await this.userRepository.update(existingSocial.userId, {
         email: githubData.email,
-        displayName: githubData.displayName,
-        avatarUrl: githubData.avatarUrl || existingSocial.user.avatarUrl,
       });
 
       // UsersService 사용
@@ -339,7 +333,7 @@ export class AuthService {
       ...tokens,
     };
   }
-  // auth.service.ts
+
   async refreshAccessToken(refreshToken: string) {
     try {
       // Refresh token 검증
@@ -350,13 +344,10 @@ export class AuthService {
         throw new UnauthorizedException('사용자를 찾을 수 없습니다');
       }
 
-      // 새로운 토큰 쌍 생성 (refresh token도 갱신)
+      // 새로운 토큰 쌍 생성
       const tokens = this.generateTokens(user);
 
-      return {
-        user,
-        ...tokens,
-      };
+      return { user, ...tokens };
     } catch (error) {
       throw new UnauthorizedException('Refresh token이 유효하지 않습니다');
     }

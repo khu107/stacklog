@@ -34,6 +34,7 @@ export class TokenMiddleware implements NestMiddleware {
             idname: payload.idname,
             displayName: payload.displayName,
             avatarUrl: payload.avatarUrl,
+            bio: payload.bio,
             iat: payload.iat,
             exp: payload.exp,
           };
@@ -44,7 +45,12 @@ export class TokenMiddleware implements NestMiddleware {
             idname: payload.idname,
           });
         } catch (jwtError) {
-          console.log('⚠️ Token 미들웨어 - JWT 검증 실패:', jwtError.message);
+          if (jwtError.name === 'TokenExpiredError') {
+            console.log('⏰ 토큰 만료됨 (공개 API에서는 무시)');
+          } else {
+            // 다른 JWT 오류는 로그 출력
+            console.log('⚠️ Token 미들웨어 - JWT 검증 실패:', jwtError.message);
+          }
         }
       } else {
         console.log('ℹ️ Token 미들웨어 - 토큰 없음');
