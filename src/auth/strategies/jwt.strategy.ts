@@ -12,7 +12,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
   ) {
     super({
       jwtFromRequest: ExtractJwt.fromExtractors([
-        ExtractJwt.fromAuthHeaderAsBearerToken(),
+        // ExtractJwt.fromAuthHeaderAsBearerToken(), // 나중에 앱용
         (request) => request?.cookies?.accessToken,
       ]),
       ignoreExpiration: false,

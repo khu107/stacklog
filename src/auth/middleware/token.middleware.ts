@@ -13,12 +13,14 @@ export class TokenMiddleware implements NestMiddleware {
   use(req: any, res: Response, next: NextFunction) {
     try {
       // 1. 헤더에서 토큰 추출 (Bearer 토큰)
-      let token = this.extractTokenFromHeader(req);
+      // let token = this.extractTokenFromHeader(req);
+
+      const token = this.extractTokenFromCookies(req);
 
       // 2. 헤더에 없으면 쿠키에서 추출
-      if (!token) {
-        token = this.extractTokenFromCookies(req);
-      }
+      // if (!token) {
+      //   token = this.extractTokenFromCookies(req);
+      // }
 
       if (token) {
         try {
@@ -27,7 +29,7 @@ export class TokenMiddleware implements NestMiddleware {
             secret: this.configService.get<string>('ACCESS_TOKEN_SECRET'),
           });
 
-          // 4. 사용자 정보를 req 객체에 추가
+          // 사용자 정보를 req 객체에 추가
           req.user = {
             sub: payload.sub,
             email: payload.email,
@@ -62,13 +64,13 @@ export class TokenMiddleware implements NestMiddleware {
     next();
   }
 
-  private extractTokenFromHeader(request: any): string | undefined {
-    const authHeader = request.headers.authorization;
-    if (!authHeader) return undefined;
+  // private extractTokenFromHeader(request: any): string | undefined {
+  //   const authHeader = request.headers.authorization;
+  //   if (!authHeader) return undefined;
 
-    const [type, token] = authHeader.split(' ');
-    return type === 'Bearer' ? token : undefined;
-  }
+  //   const [type, token] = authHeader.split(' ');
+  //   return type === 'Bearer' ? token : undefined;
+  // }
 
   private extractTokenFromCookies(request: any): string | undefined {
     return request.cookies?.accessToken;

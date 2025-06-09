@@ -20,7 +20,7 @@ async function bootstrap() {
     .setTitle('stacklog')
     .setDescription('stacklog NestJs')
     .setVersion('1.0')
-    .addBearerAuth()
+    // .addBearerAuth() // 나중에 앱용
     .addCookieAuth()
     .build();
 
