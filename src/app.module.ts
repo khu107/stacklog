@@ -7,6 +7,7 @@ import { SocialAuth } from './auth/entity/social-auth.entity';
 import { AuthModule } from './auth/auth.module';
 import { UsersModule } from './users/users.module';
 import { TokenMiddleware } from './auth/middleware/token.middleware';
+import { UploadModule } from './upload/upload.module';
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -47,6 +48,7 @@ import { TokenMiddleware } from './auth/middleware/token.middleware';
     }),
     AuthModule,
     UsersModule,
+    UploadModule,
   ],
   providers: [TokenMiddleware],
 })

@@ -3,7 +3,7 @@ export class UserResponseDto {
   email: string;
   displayName: string;
   idname: string;
-  avatarUrl: string;
+  avatarUrl: string | null;
   bio: string;
   status: string;
   github: string;

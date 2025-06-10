@@ -155,6 +155,25 @@ export class UsersService {
     console.log(`✅ 계정 삭제 완료: userId=${userId}`);
   }
 
+  // 아바타 업데이트
+  async updateAvatar(userId: number, avatarUrl: string | null): Promise<void> {
+    const user = await this.userRepository.findOne({
+      where: { id: userId },
+    });
+
+    if (!user) {
+      throw new NotFoundException('사용자를 찾을 수 없습니다');
+    }
+
+    if (avatarUrl === null) {
+      user.avatarUrl = undefined as any;
+    } else {
+      user.avatarUrl = avatarUrl;
+    }
+
+    await this.userRepository.save(user);
+  }
+
   findOne(id: number) {
     return this.userRepository.findOne({
       where: { id: +id },
