@@ -18,13 +18,6 @@ export class UsersService {
   constructor(
     @InjectRepository(User) private userRepository: Repository<User>,
   ) {}
-  create(createUserDto: CreateUserDto) {
-    return 'This action adds a new user';
-  }
-
-  findAll() {
-    return this.userRepository.find();
-  }
 
   // 내 프로필 조회
   async getMyProfile(userId: number) {
@@ -179,13 +172,5 @@ export class UsersService {
       where: { id: +id },
       relations: ['socialAuth'],
     });
-  }
-
-  update(id: number, updateUserDto: UpdateUserDto) {
-    return `This action updates a #${id} user`;
-  }
-
-  remove(id: number) {
-    return `This action removes a #${id} user`;
   }
 }

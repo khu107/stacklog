@@ -7,6 +7,7 @@ export class UploadService {
   private readonly publicPath = join(process.cwd(), 'public');
   private readonly tempPath = join(this.publicPath, 'temp');
   private readonly avatarPath = join(this.publicPath, 'avatar');
+  private readonly postPath = join(this.publicPath, 'post');
 
   constructor() {
     // 폴더가 없으면 생성
@@ -18,6 +19,9 @@ export class UploadService {
     }
     if (!existsSync(this.avatarPath)) {
       mkdirSync(this.avatarPath, { recursive: true });
+    }
+    if (!existsSync(this.postPath)) {
+      mkdirSync(this.postPath, { recursive: true });
     }
   }
 
@@ -31,13 +35,30 @@ export class UploadService {
     return avatarFilename;
   }
 
-  // 파일 삭제
-  deleteFile(filename: string, folder: 'temp' | 'avatar'): void {
+  moveToPosts(tempFilename: string): string {
+    const tempFilePath = join(this.tempPath, tempFilename);
+    const postFilename = tempFilename.replace('temp-', 'post-');
+    const postFilePath = join(this.postPath, postFilename);
+
+    renameSync(tempFilePath, postFilePath);
+    return postFilename;
+  }
+
+  deleteFile(filename: string, folder: 'temp' | 'avatar' | 'post'): void {
     try {
-      const filePath =
-        folder === 'temp'
-          ? join(this.tempPath, filename)
-          : join(this.avatarPath, filename);
+      let filePath: string;
+
+      switch (folder) {
+        case 'temp':
+          filePath = join(this.tempPath, filename);
+          break;
+        case 'avatar':
+          filePath = join(this.avatarPath, filename);
+          break;
+        case 'post':
+          filePath = join(this.postPath, filename);
+          break;
+      }
 
       if (existsSync(filePath)) {
         unlinkSync(filePath);
@@ -50,5 +71,9 @@ export class UploadService {
   // 아바타 URL 생성
   getAvatarUrl(filename: string): string {
     return `/avatar/${filename}`;
+  }
+
+  getPostUrl(filename: string): string {
+    return `/post/${filename}`;
   }
 }

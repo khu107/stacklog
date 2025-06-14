@@ -33,16 +33,6 @@ export class UsersController {
     private readonly uploadService: UploadService,
   ) {}
 
-  @Post()
-  create(@Body() createUserDto: CreateUserDto) {
-    return this.usersService.create(createUserDto);
-  }
-
-  @Get()
-  findAll() {
-    return this.usersService.findAll();
-  }
-
   @Get('me')
   @UseGuards(JwtAuthGuard)
   async getMyProfile(@Req() req): Promise<UserResponseDto> {
@@ -132,7 +122,7 @@ export class UsersController {
   @UseGuards(JwtAuthGuard)
   async deleteAvatar(@Req() req) {
     try {
-      console.log('🗑️ 아바타 삭제 시작:', req.user?.sub);
+      console.log('아바타 삭제 시작:', req.user?.sub);
 
       // 현재 사용자 정보 조회
       const user = await this.usersService.findOne(req.user?.sub);
@@ -140,28 +130,28 @@ export class UsersController {
         throw new NotFoundException('사용자를 찾을 수 없습니다.');
       }
 
-      console.log('📄 기존 avatarUrl:', user.avatarUrl);
+      console.log('기존 avatarUrl:', user.avatarUrl);
 
       // 기존 아바타가 있다면 파일 삭제
       if (user.avatarUrl) {
         const filename = user.avatarUrl.split('/').pop();
         if (filename) {
-          console.log('🗂️ 파일 삭제:', filename);
+          console.log('파일 삭제:', filename);
           this.uploadService.deleteFile(filename, 'avatar');
         }
       }
 
       // DB에서 아바타 URL 제거
-      console.log('💾 DB 업데이트 시작');
+      console.log('DB 업데이트 시작');
       await this.usersService.updateAvatar(req.user?.sub, null);
-      console.log('✅ DB 업데이트 완료');
+      console.log('DB 업데이트 완료');
 
       return {
         message: '아바타가 성공적으로 삭제되었습니다.',
         avatarUrl: null,
       };
     } catch (error) {
-      console.error('❌ 아바타 삭제 실패:', error);
+      console.error('아바타 삭제 실패:', error);
       throw error;
     }
   }
@@ -170,11 +160,9 @@ export class UsersController {
   async deleteAccount(@Req() req, @Res() res): Promise<void> {
     await this.usersService.deleteAccount(req.user?.sub);
 
-    // 🍪 쿠키 삭제
+    // 쿠키 삭제
     res.clearCookie('accessToken');
     res.clearCookie('refreshToken');
-
-    console.log('✅ 계정 삭제 및 쿠키 정리 완료');
 
     res.json({ message: '계정이 성공적으로 삭제되었습니다' });
   }
@@ -182,15 +170,5 @@ export class UsersController {
   @Get(':id')
   findOne(@Param('id') id: string) {
     return this.usersService.findOne(+id);
-  }
-
-  @Patch(':id')
-  update(@Param('id') id: string, @Body() updateUserDto: UpdateUserDto) {
-    return this.usersService.update(+id, updateUserDto);
-  }
-
-  @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.usersService.remove(+id);
   }
 }

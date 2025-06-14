@@ -8,6 +8,8 @@ import { AuthModule } from './auth/auth.module';
 import { UsersModule } from './users/users.module';
 import { TokenMiddleware } from './auth/middleware/token.middleware';
 import { UploadModule } from './upload/upload.module';
+import { PostsModule } from './posts/posts.module';
+import { Post } from './posts/entity/post.entity';
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -41,7 +43,7 @@ import { UploadModule } from './upload/upload.module';
         username: configService.get<string>('DB_USERNAME'),
         password: configService.get<string>('DB_PASSWORD'),
         database: configService.get<string>('DB_DATABASE'),
-        entities: [User, SocialAuth],
+        entities: [User, SocialAuth, Post],
         synchronize: true,
       }),
       inject: [ConfigService],
@@ -49,6 +51,7 @@ import { UploadModule } from './upload/upload.module';
     AuthModule,
     UsersModule,
     UploadModule,
+    PostsModule,
   ],
   providers: [TokenMiddleware],
 })

@@ -1,9 +1,11 @@
 import { SocialAuth } from 'src/auth/entity/social-auth.entity';
 import { BaseTable } from 'src/common/entity/base-table.entity';
+import { Post } from 'src/posts/entity/post.entity';
 import {
   Column,
   Entity,
   Index,
+  OneToMany,
   OneToOne,
   PrimaryGeneratedColumn,
 } from 'typeorm';
@@ -58,4 +60,7 @@ export class User extends BaseTable {
     cascade: true,
   })
   socialAuth: SocialAuth;
+
+  @OneToMany(() => Post, (post) => post.author)
+  posts: Post[];
 }

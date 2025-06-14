@@ -42,12 +42,12 @@ export class AuthController {
 
     res.cookie('accessToken', result.accessToken, {
       ...cookieOptions,
-      maxAge: 15 * 60 * 1000, // 15분
+      maxAge: 15 * 60 * 1000,
     });
 
     res.cookie('refreshToken', result.refreshToken, {
       ...cookieOptions,
-      maxAge: 7 * 24 * 60 * 60 * 1000, // 7일
+      maxAge: 7 * 24 * 60 * 60 * 1000,
     });
 
     if (result.needsProfileSetup) {
@@ -77,12 +77,12 @@ export class AuthController {
 
     res.cookie('accessToken', result.accessToken, {
       ...cookieOptions,
-      maxAge: 15 * 60 * 1000, // 15분
+      maxAge: 15 * 60 * 1000,
     });
 
     res.cookie('refreshToken', result.refreshToken, {
       ...cookieOptions,
-      maxAge: 7 * 24 * 60 * 60 * 1000, // 7일
+      maxAge: 7 * 24 * 60 * 60 * 1000,
     });
 
     if (result.needsProfileSetup) {
@@ -116,12 +116,12 @@ export class AuthController {
 
     res.cookie('accessToken', result.accessToken, {
       ...cookieOptions,
-      maxAge: 15 * 60 * 1000, // 15분
+      maxAge: 15 * 60 * 1000,
     });
 
     res.cookie('refreshToken', result.refreshToken, {
       ...cookieOptions,
-      maxAge: 7 * 24 * 60 * 60 * 1000, // 7일
+      maxAge: 7 * 24 * 60 * 60 * 1000,
     });
 
     if (result.needsProfileSetup) {
@@ -157,12 +157,12 @@ export class AuthController {
 
     res.cookie('accessToken', result.accessToken, {
       ...cookieOptions,
-      maxAge: 15 * 60 * 1000, // 15분
+      maxAge: 15 * 60 * 1000,
     });
 
     res.cookie('refreshToken', result.refreshToken, {
       ...cookieOptions,
-      maxAge: 7 * 24 * 60 * 60 * 1000, // 7일
+      maxAge: 7 * 24 * 60 * 60 * 1000,
     });
 
     return res.json(result);
@@ -187,12 +187,12 @@ export class AuthController {
 
     res.cookie('accessToken', result.accessToken, {
       ...cookieOptions,
-      maxAge: 15 * 60 * 1000, // 15분
+      maxAge: 15 * 60 * 1000,
     });
 
     res.cookie('refreshToken', result.refreshToken, {
       ...cookieOptions,
-      maxAge: 7 * 24 * 60 * 60 * 1000, // 7일
+      maxAge: 7 * 24 * 60 * 60 * 1000,
     });
 
     return res.json({ success: true });

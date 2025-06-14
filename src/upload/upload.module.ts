@@ -22,11 +22,11 @@ import { join } from 'path';
         callback(null, true);
       },
       limits: {
-        fileSize: 5 * 1024 * 1024, // 5MB
+        fileSize: 5 * 1024 * 1024,
       },
     }),
   ],
   providers: [UploadService],
-  exports: [UploadService, MulterModule], // 추가
+  exports: [UploadService, MulterModule],
 })
 export class UploadModule {}
