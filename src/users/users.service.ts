@@ -19,6 +19,12 @@ export class UsersService {
     @InjectRepository(User) private userRepository: Repository<User>,
   ) {}
 
+  // 임시 테스트를 위해 나중에 관리자로 전환
+  async findAll() {
+    return this.userRepository.find({
+      select: ['id', 'displayName', 'idname', 'avatarUrl', 'bio'],
+    });
+  }
   // 내 프로필 조회
   async getMyProfile(userId: number) {
     const user = await this.userRepository.findOne({
@@ -44,7 +50,28 @@ export class UsersService {
     };
   }
 
-  // 📌 기본 정보 수정
+  async getUserProfile(idname: string) {
+    const user = await this.userRepository.findOne({
+      where: { idname },
+      select: [
+        'id',
+        'displayName',
+        'idname',
+        'avatarUrl',
+        'bio',
+        'github',
+        'linkedin',
+        'website',
+      ],
+    });
+
+    if (!user) {
+      throw new NotFoundException('사용자를 찾을 수 없습니다');
+    }
+
+    return user;
+  }
+  // 기본 정보 수정
   async updateBasicProfile(
     userId: number,
     updateProfileBasicDto: UpdateProfileBasicDto,
@@ -69,7 +96,7 @@ export class UsersService {
     return this.getMyProfile(userId);
   }
 
-  // 📌 소셜 링크 수정
+  // 소셜 링크 수정
   async updateSocialProfile(
     userId: number,
     updateProfileSocialDto: UpdateProfileSocialDto,
@@ -97,7 +124,7 @@ export class UsersService {
     return this.getMyProfile(userId);
   }
 
-  // 📌 idname 수정
+  // idname 수정
   async updateIdname(
     userId: number,
     updateProfileIdnameDto: UpdateProfileIdnameDto,
@@ -145,7 +172,7 @@ export class UsersService {
     }
 
     await this.userRepository.remove(user);
-    console.log(`✅ 계정 삭제 완료: userId=${userId}`);
+    console.log(`계정 삭제 완료: userId=${userId}`);
   }
 
   // 아바타 업데이트

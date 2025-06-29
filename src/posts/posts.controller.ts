@@ -10,12 +10,14 @@ import {
   UseInterceptors,
   UploadedFile,
   BadRequestException,
+  Query,
 } from '@nestjs/common';
 import { PostsService } from './posts.service';
 import { CreatePostDto } from './dto/create-post.dto';
 import { UpdatePostDto } from './dto/update-post.dto';
 import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
 import { FileInterceptor } from '@nestjs/platform-express';
+import { SearchPostDto } from './dto/search-post.dto';
 
 @Controller('posts')
 export class PostsController {
@@ -64,6 +66,28 @@ export class PostsController {
   async getMyDrafts(@Request() req) {
     const userId = req.user.sub;
     return this.postsService.findMyDrafts(userId);
+  }
+
+  @Get('user/:userId')
+  async getUserPosts(@Param('userId') userId: string) {
+    return this.postsService.findUserPosts(+userId);
+  }
+
+  @Get('search')
+  async search(@Query() searchDto: SearchPostDto) {
+    // 검색어가 없으면 빈 결과 반환
+    if (!searchDto.q || searchDto.q.trim() === '') {
+      return {
+        posts: [],
+        query: searchDto.q || '',
+      };
+    }
+
+    return this.postsService.search({
+      q: searchDto.q.trim(),
+      page: searchDto.page,
+      take: searchDto.take,
+    });
   }
 
   @Get(':slug')

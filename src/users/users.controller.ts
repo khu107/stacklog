@@ -33,6 +33,12 @@ export class UsersController {
     private readonly uploadService: UploadService,
   ) {}
 
+  // 임시 테스트를 위해 나중에 관리자로 전환
+  @Get()
+  async findAllUsers() {
+    return this.usersService.findAll();
+  }
+
   @Get('me')
   @UseGuards(JwtAuthGuard)
   async getMyProfile(@Req() req): Promise<UserResponseDto> {
@@ -118,6 +124,10 @@ export class UsersController {
     };
   }
 
+  @Get(':idname/profile')
+  async getUserProfile(@Param('idname') idname: string) {
+    return this.usersService.getUserProfile(idname);
+  }
   @Delete('me/avatar')
   @UseGuards(JwtAuthGuard)
   async deleteAvatar(@Req() req) {

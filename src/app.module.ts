@@ -68,7 +68,7 @@ export class AppModule {
         { path: 'auth/github', method: RequestMethod.GET },
         { path: 'auth/github/callback', method: RequestMethod.GET },
         // Public 라우트 제외
-        { path: 'users/check-idname/(.*)', method: RequestMethod.GET },
+        { path: 'users/check-idname/*path', method: RequestMethod.GET },
       )
       .forRoutes('*');
   }

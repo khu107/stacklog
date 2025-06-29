@@ -9,6 +9,8 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Post, PostStatus } from './entity/post.entity';
 import { UploadService } from '../upload/upload.service';
+import { CommonService } from 'src/common/common.service';
+import { SearchPostDto } from './dto/search-post.dto';
 
 @Injectable()
 export class PostsService {
@@ -16,6 +18,7 @@ export class PostsService {
     @InjectRepository(Post)
     private readonly postRepository: Repository<Post>,
     private readonly uploadService: UploadService,
+    private readonly commonService: CommonService,
   ) {}
 
   async create(createPostDto: CreatePostDto, userId: string): Promise<Post> {
@@ -64,6 +67,8 @@ export class PostsService {
         id: true,
         title: true,
         summary: true,
+        content: true,
+        tags: true,
         slug: true,
         thumbnail: true,
         publishedAt: true,
@@ -94,6 +99,7 @@ export class PostsService {
         thumbnail: true,
         publishedAt: true,
         createdAt: true,
+        tags: true,
         status: true,
         isPrivate: true,
         userId: true,
@@ -142,7 +148,7 @@ export class PostsService {
         thumbnail: true,
         publishedAt: true,
         createdAt: true,
-        isPrivate: true, // 공개/비공개 구분 위해
+        isPrivate: true,
         author: {
           id: true,
           displayName: true,
@@ -179,13 +185,92 @@ export class PostsService {
         },
       },
       order: {
-        updatedAt: 'DESC', // 최근 수정순
+        updatedAt: 'DESC',
+      },
+    });
+  }
+
+  async findUserPosts(userId: number): Promise<Post[]> {
+    return this.postRepository.find({
+      where: {
+        userId,
+        status: PostStatus.PUBLISHED,
+        isPrivate: false,
+      },
+      select: {
+        id: true,
+        title: true,
+        summary: true,
+        slug: true,
+        content: true,
+        thumbnail: true,
+        publishedAt: true,
+        createdAt: true,
+      },
+      order: {
+        publishedAt: 'DESC',
       },
     });
   }
 
   update(id: number, updatePostDto: UpdatePostDto) {
     return `This action updates a #${id} post`;
+  }
+
+  async search(dto: SearchPostDto) {
+    const { q, page, take } = dto;
+
+    const qb = this.postRepository
+      .createQueryBuilder('post')
+      .leftJoinAndSelect('post.author', 'author')
+      .where('post.status = :status', { status: PostStatus.PUBLISHED })
+      .andWhere('post.isPrivate = :isPrivate', { isPrivate: false })
+      .andWhere(
+        '(post.title ILIKE :query OR post.summary ILIKE :query OR post.tags::text ILIKE :query)',
+        { query: `%${q}%` },
+      )
+      .select([
+        'post.id',
+        'post.title',
+        'post.summary',
+        'post.content',
+        'post.tags',
+        'post.slug',
+        'post.thumbnail',
+        'post.publishedAt',
+        'post.createdAt',
+        'author.id',
+        'author.displayName',
+        'author.idname',
+        'author.avatarUrl',
+      ])
+      .addSelect(
+        `CASE 
+        WHEN post.title ILIKE :exactQuery THEN 1 
+        WHEN post.title ILIKE :query THEN 2 
+        WHEN post.summary ILIKE :query THEN 3
+        WHEN post.tags::text ILIKE :query THEN 4
+        ELSE 5 
+      END`,
+        'relevance',
+      )
+      .setParameter('exactQuery', `%${q}%`)
+      .orderBy('relevance', 'ASC')
+      .addOrderBy('post.publishedAt', 'DESC');
+
+    if (page && take) {
+      this.commonService.applyPagePaginationParamsToQb(qb, dto);
+    }
+
+    const [posts, total] = await qb.getManyAndCount();
+    return {
+      posts,
+      total,
+      query: dto.q,
+      page: dto.page,
+      take: dto.take,
+      totalPages: Math.ceil(total / dto.take),
+    };
   }
 
   async remove(id: number, userId: string): Promise<void> {
